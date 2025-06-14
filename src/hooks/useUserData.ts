@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +38,7 @@ export const useUserData = () => {
     level: 1,
     currentXP: 0,
     totalXP: 0,
-    streak: 0,
+    streak: 1, // Start from 1 instead of 0
     lastCompletionDate: null
   });
   const [loading, setLoading] = useState(false);
@@ -63,7 +62,7 @@ export const useUserData = () => {
         level: 1,
         currentXP: 0,
         totalXP: 0,
-        streak: 0,
+        streak: 1, // Start from 1 instead of 0
         lastCompletionDate: null
       });
     }
@@ -108,7 +107,7 @@ export const useUserData = () => {
             level: 1,
             current_xp: 0,
             total_xp: 0,
-            streak: 0
+            streak: 1 // Start from 1 instead of 0
           })
           .select()
           .single();
@@ -141,7 +140,7 @@ export const useUserData = () => {
           level: statsData.level,
           currentXP: statsData.current_xp,
           totalXP: statsData.total_xp,
-          streak: statsData.streak,
+          streak: Math.max(1, statsData.streak), // Ensure streak is at least 1
           lastCompletionDate: statsData.last_completion_date
         });
       }
@@ -190,7 +189,7 @@ export const useUserData = () => {
   };
 
   const calculateStreak = (lastCompletionDate: string | null): number => {
-    if (!lastCompletionDate) return 1; // First completion
+    if (!lastCompletionDate) return 1; // First completion starts at 1
 
     const lastDate = new Date(lastCompletionDate);
     const today = new Date();
@@ -203,11 +202,11 @@ export const useUserData = () => {
     yesterday.setHours(0, 0, 0, 0);
 
     if (lastDate.getTime() === today.getTime()) {
-      // Already completed today, don't change streak
-      return userStats.streak;
+      // Already completed today, don't change streak (keep current)
+      return Math.max(1, userStats.streak);
     } else if (lastDate.getTime() === yesterday.getTime()) {
       // Completed yesterday, increment streak
-      return userStats.streak + 1;
+      return Math.max(1, userStats.streak + 1);
     } else {
       // Streak broken, reset to 1
       return 1;
@@ -292,7 +291,7 @@ export const useUserData = () => {
         level: newLevel,
         current_xp: newCurrentXP,
         total_xp: newTotalXP,
-        streak: newStreak,
+        streak: Math.max(1, newStreak), // Ensure streak is at least 1
         last_completion_date: today,
         updated_at: new Date().toISOString()
       };
@@ -313,7 +312,7 @@ export const useUserData = () => {
         level: newLevel,
         currentXP: newCurrentXP,
         totalXP: newTotalXP,
-        streak: newStreak,
+        streak: Math.max(1, newStreak), // Ensure streak is at least 1
         lastCompletionDate: today
       }));
 
