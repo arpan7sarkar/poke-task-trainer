@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { TaskList } from '../components/TaskList';
 import { ProgressBar } from '../components/ProgressBar';
@@ -168,7 +169,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
+    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-blue-200 to-purple-300 dark:from-slate-900 dark:via-purple-900 dark:to-cyan-900">
       {/* Header */}
       <div className="bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm shadow-lg border-b-4 border-blue-500 dark:border-blue-400">
         <div className="max-w-7xl mx-auto px-4 py-6">
