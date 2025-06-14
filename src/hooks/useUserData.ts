@@ -189,6 +189,31 @@ export const useUserData = () => {
     }
   };
 
+  const calculateStreak = (lastCompletionDate: string | null): number => {
+    if (!lastCompletionDate) return 1; // First completion
+
+    const lastDate = new Date(lastCompletionDate);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    // Reset time components to compare only dates
+    lastDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+    yesterday.setHours(0, 0, 0, 0);
+
+    if (lastDate.getTime() === today.getTime()) {
+      // Already completed today, don't change streak
+      return userStats.streak;
+    } else if (lastDate.getTime() === yesterday.getTime()) {
+      // Completed yesterday, increment streak
+      return userStats.streak + 1;
+    } else {
+      // Streak broken, reset to 1
+      return 1;
+    }
+  };
+
   const toggleTask = async (taskId: string) => {
     if (!user) return;
 
@@ -208,14 +233,18 @@ export const useUserData = () => {
         t.id === taskId ? { ...t, completed: !t.completed } : t
       ));
 
-      // If completing a task, add XP
+      // If completing a task, add XP and update streak
       if (!task.completed) {
-        await updateUserXP(task.xpReward);
+        await updateUserXPAndStreak(task.xpReward);
         toast.success(`+${task.xpReward} XP earned!`);
       }
     } catch (error) {
       console.error('Error toggling task:', error);
       toast.error('Failed to update task');
+      // Revert the optimistic update
+      setTasks(prev => prev.map(t => 
+        t.id === taskId ? { ...t, completed: task.completed } : t
+      ));
     }
   };
 
@@ -239,8 +268,10 @@ export const useUserData = () => {
     }
   };
 
-  const updateUserXP = async (xpGained: number) => {
+  const updateUserXPAndStreak = async (xpGained: number, retryCount: number = 0) => {
     if (!user) return;
+    
+    const maxRetries = 3;
 
     try {
       const newTotalXP = userStats.totalXP + xpGained;
@@ -253,32 +284,60 @@ export const useUserData = () => {
         newLevel += 1;
       }
 
+      // Calculate new streak
+      const today = new Date().toISOString().split('T')[0];
+      const newStreak = calculateStreak(userStats.lastCompletionDate);
+
+      const updateData = {
+        level: newLevel,
+        current_xp: newCurrentXP,
+        total_xp: newTotalXP,
+        streak: newStreak,
+        last_completion_date: today,
+        updated_at: new Date().toISOString()
+      };
+
       const { error } = await supabase
         .from('user_stats')
-        .update({
-          level: newLevel,
-          current_xp: newCurrentXP,
-          total_xp: newTotalXP,
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('user_id', user.id);
 
       if (error) throw error;
 
+      // Update local state only after successful database update
       const oldLevel = userStats.level;
+      const oldStreak = userStats.streak;
+      
       setUserStats(prev => ({
         ...prev,
         level: newLevel,
         currentXP: newCurrentXP,
-        totalXP: newTotalXP
+        totalXP: newTotalXP,
+        streak: newStreak,
+        lastCompletionDate: today
       }));
 
       if (newLevel > oldLevel) {
         toast.success(`Level up! You're now level ${newLevel}!`);
       }
+
+      if (newStreak > oldStreak) {
+        toast.success(`🔥 ${newStreak} day streak!`);
+      }
+
     } catch (error) {
-      console.error('Error updating XP:', error);
-      toast.error('Failed to update XP');
+      console.error('Error updating XP and streak:', error);
+      
+      if (retryCount < maxRetries) {
+        console.log(`Retrying XP update... Attempt ${retryCount + 1}/${maxRetries}`);
+        setTimeout(() => {
+          updateUserXPAndStreak(xpGained, retryCount + 1);
+        }, 1000 * (retryCount + 1)); // Exponential backoff
+      } else {
+        toast.error('Failed to save progress. Please try again.');
+        // Refresh data to get latest state from database
+        fetchUserData();
+      }
     }
   };
 
@@ -286,6 +345,12 @@ export const useUserData = () => {
     if (!user) return;
 
     try {
+      // Check if user has enough XP
+      if (userStats.currentXP < xpCost) {
+        toast.error('Not enough XP to catch this Pokémon!');
+        return;
+      }
+
       // Add pokemon to collection
       const { error: pokemonError } = await supabase
         .from('user_pokemon')
