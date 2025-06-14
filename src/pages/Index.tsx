@@ -93,52 +93,47 @@ const Index = () => {
 
   const completeTask = (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
-    if (!task) return;
+    if (!task || task.completed) return;
 
-    // Toggle task completion
+    // Update task completion
     setTasks(tasks.map(t => 
-      t.id === taskId ? { ...t, completed: !t.completed } : t
+      t.id === taskId ? { ...t, completed: true } : t
     ));
 
-    // Only award/deduct XP when completing (not uncompleting)
-    if (!task.completed) {
-      // Award XP and update stats for completion
-      const newTotalXP = userStats.totalXP + task.xpReward;
-      const newCurrentXP = userStats.currentXP + task.xpReward;
-      let newLevel = userStats.level;
-      let xpForNextLevel = userStats.xpToNextLevel;
+    // Award XP and update stats
+    const newTotalXP = userStats.totalXP + task.xpReward;
+    const newCurrentXP = userStats.currentXP + task.xpReward;
+    let newLevel = userStats.level;
+    let xpForNextLevel = userStats.xpToNextLevel;
 
-      // Check for level up
-      if (newCurrentXP >= userStats.xpToNextLevel) {
-        newLevel += 1;
-        xpForNextLevel = newLevel * 100; // XP required increases with level
-      }
-
-      // Update streak
-      const today = new Date().toDateString();
-      const yesterday = new Date(Date.now() - 86400000).toDateString();
-      let newStreak = userStats.streak;
-
-      if (userStats.lastCompletionDate === yesterday) {
-        newStreak += 1;
-      } else if (userStats.lastCompletionDate !== today) {
-        newStreak = 1;
-      }
-
-      setUserStats({
-        ...userStats,
-        currentXP: newCurrentXP >= userStats.xpToNextLevel ? newCurrentXP - userStats.xpToNextLevel : newCurrentXP,
-        totalXP: newTotalXP,
-        level: newLevel,
-        xpToNextLevel: xpForNextLevel,
-        streak: newStreak,
-        lastCompletionDate: today
-      });
-
-      console.log(`Task completed! +${task.xpReward} XP`);
-    } else {
-      console.log(`Task unchecked!`);
+    // Check for level up
+    if (newCurrentXP >= userStats.xpToNextLevel) {
+      newLevel += 1;
+      xpForNextLevel = newLevel * 100; // XP required increases with level
     }
+
+    // Update streak
+    const today = new Date().toDateString();
+    const yesterday = new Date(Date.now() - 86400000).toDateString();
+    let newStreak = userStats.streak;
+
+    if (userStats.lastCompletionDate === yesterday) {
+      newStreak += 1;
+    } else if (userStats.lastCompletionDate !== today) {
+      newStreak = 1;
+    }
+
+    setUserStats({
+      ...userStats,
+      currentXP: newCurrentXP >= userStats.xpToNextLevel ? newCurrentXP - userStats.xpToNextLevel : newCurrentXP,
+      totalXP: newTotalXP,
+      level: newLevel,
+      xpToNextLevel: xpForNextLevel,
+      streak: newStreak,
+      lastCompletionDate: today
+    });
+
+    console.log(`Task completed! +${task.xpReward} XP`);
   };
 
   const deleteTask = (taskId: string) => {

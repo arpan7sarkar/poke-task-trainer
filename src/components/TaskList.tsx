@@ -1,3 +1,4 @@
+
 import { CheckCircle, Trash2, Clock, Zap } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,12 +42,13 @@ export const TaskList = ({
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onCompleteTask(task.id)}
+              onClick={() => !task.completed && onCompleteTask(task.id)}
               className={`p-2 rounded-full ${
                 task.completed 
-                  ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30 hover:text-gray-400 hover:bg-gray-100 dark:hover:text-gray-500 dark:hover:bg-gray-700/50' 
+                  ? 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/30' 
                   : 'text-gray-400 hover:text-green-600 hover:bg-green-50 dark:text-gray-500 dark:hover:text-green-400 dark:hover:bg-green-900/30'
               }`}
+              disabled={task.completed}
             >
               <CheckCircle className="w-5 h-5" />
             </Button>
