@@ -1,285 +1,200 @@
-import { useState, useEffect } from 'react';
-import { TaskList } from '../components/TaskList';
-import { ProgressBar } from '../components/ProgressBar';
-import { PokemonCollection } from '../components/PokemonCollection';
-import { StatsPanel } from '../components/StatsPanel';
-import { Plus, Zap, Award, Calendar } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ThemeToggle } from '../components/ThemeToggle';
 
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-  priority: 'low' | 'medium' | 'high';
-  xpReward: number;
-  createdAt: Date;
-}
-
-interface Pokemon {
-  id: number;
-  name: string;
-  sprite: string;
-  rarity: 'common' | 'rare' | 'legendary';
-  dateAcquired: Date;
-}
-
-interface UserStats {
-  level: number;
-  currentXP: number;
-  xpToNextLevel: number;
-  totalXP: number;
-  streak: number;
-  lastCompletionDate: string | null;
-  pokemon: Pokemon[];
-}
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Plus, CheckCircle, Star, Trophy, Target } from "lucide-react";
+import { PokemonCollection } from "@/components/PokemonCollection";
+import { TaskList } from "@/components/TaskList";
+import { StatsPanel } from "@/components/StatsPanel";
+import { ProgressBar } from "@/components/ProgressBar";
+import AuthButton from "@/components/AuthButton";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [userStats, setUserStats] = useState<UserStats>({
-    level: 1,
-    currentXP: 0,
-    xpToNextLevel: 100,
-    totalXP: 0,
-    streak: 0,
-    lastCompletionDate: null,
-    pokemon: []
-  });
-  const [showAddTask, setShowAddTask] = useState(false);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
-  const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
-
-  // Load data from localStorage on component mount
-  useEffect(() => {
-    const savedTasks = localStorage.getItem('poketasker-tasks');
-    const savedStats = localStorage.getItem('poketasker-stats');
-    
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
-    }
-    
-    if (savedStats) {
-      setUserStats(JSON.parse(savedStats));
-    }
-  }, []);
-
-  // Save data to localStorage whenever tasks or stats change
-  useEffect(() => {
-    localStorage.setItem('poketasker-tasks', JSON.stringify(tasks));
-  }, [tasks]);
-
-  useEffect(() => {
-    localStorage.setItem('poketasker-stats', JSON.stringify(userStats));
-  }, [userStats]);
+  const [newTask, setNewTask] = useState("");
+  const [tasks, setTasks] = useState([
+    { id: 1, text: "Complete morning workout", completed: false, priority: "high" },
+    { id: 2, text: "Review project proposals", completed: true, priority: "medium" },
+    { id: 3, text: "Call dentist for appointment", completed: false, priority: "low" },
+  ]);
+  const { user } = useAuth();
 
   const addTask = () => {
-    if (!newTaskTitle.trim()) return;
-
-    const xpRewards = { low: 10, medium: 20, high: 35 };
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title: newTaskTitle,
-      completed: false,
-      priority: newTaskPriority,
-      xpReward: xpRewards[newTaskPriority],
-      createdAt: new Date()
-    };
-
-    setTasks([...tasks, newTask]);
-    setNewTaskTitle('');
-    setShowAddTask(false);
+    if (newTask.trim()) {
+      setTasks([...tasks, {
+        id: Date.now(),
+        text: newTask,
+        completed: false,
+        priority: "medium"
+      }]);
+      setNewTask("");
+    }
   };
 
-  const completeTask = (taskId: string) => {
-    const task = tasks.find(t => t.id === taskId);
-    if (!task || task.completed) return;
-
-    // Update task completion
-    setTasks(tasks.map(t => 
-      t.id === taskId ? { ...t, completed: true } : t
+  const toggleTask = (id: number) => {
+    setTasks(tasks.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
     ));
-
-    // Award XP and update stats
-    const newTotalXP = userStats.totalXP + task.xpReward;
-    const newCurrentXP = userStats.currentXP + task.xpReward;
-    let newLevel = userStats.level;
-    let xpForNextLevel = userStats.xpToNextLevel;
-
-    // Check for level up
-    if (newCurrentXP >= userStats.xpToNextLevel) {
-      newLevel += 1;
-      xpForNextLevel = newLevel * 100; // XP required increases with level
-    }
-
-    // Update streak
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    let newStreak = userStats.streak;
-
-    if (userStats.lastCompletionDate === yesterday) {
-      newStreak += 1;
-    } else if (userStats.lastCompletionDate !== today) {
-      newStreak = 1;
-    }
-
-    setUserStats({
-      ...userStats,
-      currentXP: newCurrentXP >= userStats.xpToNextLevel ? newCurrentXP - userStats.xpToNextLevel : newCurrentXP,
-      totalXP: newTotalXP,
-      level: newLevel,
-      xpToNextLevel: xpForNextLevel,
-      streak: newStreak,
-      lastCompletionDate: today
-    });
-
-    console.log(`Task completed! +${task.xpReward} XP`);
   };
 
-  const deleteTask = (taskId: string) => {
-    setTasks(tasks.filter(t => t.id !== taskId));
+  const deleteTask = (id: number) => {
+    setTasks(tasks.filter(task => task.id !== id));
   };
 
-  const handlePokemonAcquired = (newPokemon: Pokemon, xpCost: number) => {
-    setUserStats(prev => ({
-      ...prev,
-      currentXP: prev.currentXP - xpCost,
-      pokemon: [...prev.pokemon, newPokemon]
-    }));
-    console.log(`Pokemon acquired! -${xpCost} XP spent`);
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'from-red-500 to-red-600';
-      case 'medium': return 'from-yellow-500 to-orange-500';
-      case 'low': return 'from-green-500 to-green-600';
-      default: return 'from-gray-500 to-gray-600';
-    }
-  };
-
-  const getPriorityLabel = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'Master Ball!';
-      case 'medium': return 'Great Ball!';
-      case 'low': return 'Poké Ball!';
-      default: return 'Unknown';
-    }
-  };
+  const completedTasks = tasks.filter(task => task.completed).length;
+  const totalTasks = tasks.length;
+  const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-100 via-blue-200 to-purple-300 dark:from-slate-900 dark:via-purple-900 dark:to-cyan-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
-      <div className="bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm shadow-lg border-b-4 border-blue-500 dark:border-blue-400">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-full flex items-center justify-center shadow-lg">
-                <Zap className="text-white w-6 h-6" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">PokeTasker</h1>
-                <p className="text-gray-600 dark:text-gray-300">Gotta complete 'em all!</p>
-              </div>
+      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-blue-200 dark:border-gray-700 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <Trophy className="w-6 h-6 text-white" />
             </div>
-            
-            <div className="flex items-center space-x-4">
-              <ThemeToggle />
-              <div className="text-right">
-                <div className="text-sm text-gray-600 dark:text-gray-400">Level {userStats.level} Trainer</div>
-                <div className="flex items-center space-x-2">
-                  <Award className="w-4 h-4 text-yellow-500 dark:text-yellow-400" />
-                  <span className="font-semibold text-gray-900 dark:text-white">{userStats.streak} day streak</span>
-                </div>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">PokeTasker</h1>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Catch 'em all by completing tasks!</p>
             </div>
           </div>
+          <div className="flex items-center space-x-4">
+            {user && (
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+                <span>Welcome back, {user.user_metadata?.username || user.email?.split('@')[0]}!</span>
+              </div>
+            )}
+            <AuthButton />
+          </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8">
+        {/* Welcome Message for Non-Authenticated Users */}
+        {!user && (
+          <Card className="mb-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white border-0">
+            <CardContent className="p-6 text-center">
+              <h2 className="text-2xl font-bold mb-2">Welcome to PokeTasker!</h2>
+              <p className="mb-4">Sign in to start catching Pokemon by completing your daily tasks!</p>
+              <AuthButton />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Stats Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="bg-gradient-to-br from-green-400 to-green-600 text-white border-0">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100">Completed Tasks</p>
+                  <p className="text-3xl font-bold">{completedTasks}</p>
+                </div>
+                <CheckCircle className="w-12 h-12 text-green-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-blue-400 to-blue-600 text-white border-0">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100">Total Tasks</p>
+                  <p className="text-3xl font-bold">{totalTasks}</p>
+                </div>
+                <Target className="w-12 h-12 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-purple-400 to-purple-600 text-white border-0">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100">Pokemon Caught</p>
+                  <p className="text-3xl font-bold">12</p>
+                </div>
+                <Star className="w-12 h-12 text-purple-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-orange-400 to-orange-600 text-white border-0">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100">Completion Rate</p>
+                  <p className="text-3xl font-bold">{Math.round(completionRate)}%</p>
+                </div>
+                <Trophy className="w-12 h-12 text-orange-200" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Tasks */}
+          {/* Task Management Column */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Progress Bar */}
-            <ProgressBar 
-              level={userStats.level}
-              currentXP={userStats.currentXP}
-              xpToNextLevel={userStats.xpToNextLevel}
-            />
-
-            {/* Add Task Section */}
-            <Card className="border-2 border-dashed border-blue-300 dark:border-blue-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm">
-              <CardContent className="p-6">
-                {!showAddTask ? (
-                  <Button 
-                    onClick={() => setShowAddTask(true)}
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 dark:from-blue-600 dark:to-purple-700 dark:hover:from-blue-700 dark:hover:to-purple-800 text-white shadow-lg"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Add New Task
+            {/* Add Task Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Plus className="w-5 h-5" />
+                  <span>Add New Task</span>
+                </CardTitle>
+                <CardDescription>Complete tasks to catch Pokemon and level up!</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex space-x-2">
+                  <Input
+                    placeholder="Enter a new task..."
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && addTask()}
+                    className="flex-1"
+                  />
+                  <Button onClick={addTask} className="bg-blue-600 hover:bg-blue-700">
+                    <Plus className="w-4 h-4" />
                   </Button>
-                ) : (
-                  <div className="space-y-4">
-                    <input
-                      type="text"
-                      placeholder="What needs to be done?"
-                      value={newTaskTitle}
-                      onChange={(e) => setNewTaskTitle(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                      onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                    />
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="flex space-x-2">
-                        {(['low', 'medium', 'high'] as const).map((priority) => (
-                          <button
-                            key={priority}
-                            onClick={() => setNewTaskPriority(priority)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                              newTaskPriority === priority
-                                ? `bg-gradient-to-r ${getPriorityColor(priority)} text-white shadow-lg`
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                            }`}
-                          >
-                            {getPriorityLabel(priority)}
-                          </button>
-                        ))}
-                      </div>
-                      
-                      <div className="flex space-x-2">
-                        <Button variant="outline" onClick={() => setShowAddTask(false)} className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
-                          Cancel
-                        </Button>
-                        <Button onClick={addTask} className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
-                          Add Task
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Progress Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Today's Progress</CardTitle>
+                <CardDescription>Keep going! You're doing great!</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ProgressBar current={completedTasks} total={totalTasks} />
+                <div className="mt-4 flex justify-between text-sm text-gray-600 dark:text-gray-400">
+                  <span>{completedTasks} completed</span>
+                  <span>{totalTasks - completedTasks} remaining</span>
+                </div>
               </CardContent>
             </Card>
 
             {/* Task List */}
             <TaskList 
-              tasks={tasks}
-              onCompleteTask={completeTask}
-              onDeleteTask={deleteTask}
-              getPriorityColor={getPriorityColor}
-              getPriorityLabel={getPriorityLabel}
+              tasks={tasks} 
+              onToggleTask={toggleTask} 
+              onDeleteTask={deleteTask} 
             />
           </div>
 
-          {/* Right Column - Stats and Pokemon */}
+          {/* Sidebar Column */}
           <div className="space-y-6">
-            <StatsPanel userStats={userStats} />
-            <PokemonCollection 
-              pokemon={userStats.pokemon}
-              userLevel={userStats.level}
-              currentXP={userStats.currentXP}
-              onPokemonAcquired={handlePokemonAcquired}
-            />
+            {/* Stats Panel */}
+            <StatsPanel />
+            
+            {/* Pokemon Collection Preview */}
+            <PokemonCollection />
           </div>
         </div>
       </div>
