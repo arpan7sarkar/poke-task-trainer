@@ -168,13 +168,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 shadow-lg border-b-4 border-blue-500 dark:border-blue-400">
+      <div className="bg-white/80 dark:bg-slate-800/90 backdrop-blur-sm shadow-lg border-b-4 border-blue-500 dark:border-blue-400">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 dark:from-blue-600 dark:to-purple-700 rounded-full flex items-center justify-center shadow-lg">
                 <Zap className="text-white w-6 h-6" />
               </div>
               <div>
@@ -186,10 +186,10 @@ const Index = () => {
             <div className="flex items-center space-x-4">
               <ThemeToggle />
               <div className="text-right">
-                <div className="text-sm text-gray-600 dark:text-gray-300">Level {userStats.level} Trainer</div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Level {userStats.level} Trainer</div>
                 <div className="flex items-center space-x-2">
-                  <Award className="w-4 h-4 text-yellow-500" />
-                  <span className="font-semibold dark:text-white">{userStats.streak} day streak</span>
+                  <Award className="w-4 h-4 text-yellow-500 dark:text-yellow-400" />
+                  <span className="font-semibold text-gray-900 dark:text-white">{userStats.streak} day streak</span>
                 </div>
               </div>
             </div>
@@ -209,12 +209,12 @@ const Index = () => {
             />
 
             {/* Add Task Section */}
-            <Card className="border-2 border-dashed border-blue-300 hover:border-blue-500 transition-colors">
+            <Card className="border-2 border-dashed border-blue-300 dark:border-blue-600 hover:border-blue-500 dark:hover:border-blue-400 transition-colors bg-white/70 dark:bg-slate-800/70 backdrop-blur-sm">
               <CardContent className="p-6">
                 {!showAddTask ? (
                   <Button 
                     onClick={() => setShowAddTask(true)}
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 dark:from-blue-600 dark:to-purple-700 dark:hover:from-blue-700 dark:hover:to-purple-800 text-white shadow-lg"
                   >
                     <Plus className="w-5 h-5 mr-2" />
                     Add New Task
@@ -226,7 +226,7 @@ const Index = () => {
                       placeholder="What needs to be done?"
                       value={newTaskTitle}
                       onChange={(e) => setNewTaskTitle(e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none"
+                      className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-blue-500 dark:focus:border-blue-400 focus:outline-none bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                       onKeyPress={(e) => e.key === 'Enter' && addTask()}
                     />
                     
@@ -239,7 +239,7 @@ const Index = () => {
                             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                               newTaskPriority === priority
                                 ? `bg-gradient-to-r ${getPriorityColor(priority)} text-white shadow-lg`
-                                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                             }`}
                           >
                             {getPriorityLabel(priority)}
@@ -248,10 +248,10 @@ const Index = () => {
                       </div>
                       
                       <div className="flex space-x-2">
-                        <Button variant="outline" onClick={() => setShowAddTask(false)}>
+                        <Button variant="outline" onClick={() => setShowAddTask(false)} className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700">
                           Cancel
                         </Button>
-                        <Button onClick={addTask} className="bg-blue-500 hover:bg-blue-600">
+                        <Button onClick={addTask} className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">
                           Add Task
                         </Button>
                       </div>
