@@ -4,97 +4,38 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, CheckCircle, Star, Trophy, Target } from "lucide-react";
 import { PokemonCollection } from "@/components/PokemonCollection";
 import { TaskList } from "@/components/TaskList";
 import { StatsPanel } from "@/components/StatsPanel";
 import { ProgressBar } from "@/components/ProgressBar";
+import { PokeBallSelector } from "@/components/PokeBallSelector";
 import AuthButton from "@/components/AuthButton";
 import { useAuth } from "@/contexts/AuthContext";
-
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-  priority: 'low' | 'medium' | 'high';
-  xpReward: number;
-  createdAt: Date;
-}
-
-interface Pokemon {
-  id: number;
-  name: string;
-  sprite: string;
-  rarity: 'common' | 'rare' | 'legendary';
-  dateAcquired: Date;
-}
+import { useUserData } from "@/hooks/useUserData";
 
 const Index = () => {
   const [newTask, setNewTask] = useState("");
-  const [tasks, setTasks] = useState<Task[]>([
-    { 
-      id: "1", 
-      title: "Complete morning workout", 
-      completed: false, 
-      priority: "high",
-      xpReward: 25,
-      createdAt: new Date()
-    },
-    { 
-      id: "2", 
-      title: "Review project proposals", 
-      completed: true, 
-      priority: "medium",
-      xpReward: 20,
-      createdAt: new Date()
-    },
-    { 
-      id: "3", 
-      title: "Call dentist for appointment", 
-      completed: false, 
-      priority: "low",
-      xpReward: 15,
-      createdAt: new Date()
-    },
-  ]);
-
-  const [pokemon, setPokemon] = useState<Pokemon[]>([]);
-  const [userLevel] = useState(5);
-  const [currentXP, setCurrentXP] = useState(180);
-  const [totalXP] = useState(1250);
-  const [streak] = useState(7);
-
+  const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const { user } = useAuth();
+  const { 
+    tasks, 
+    pokemon, 
+    userStats, 
+    loading,
+    addTask, 
+    toggleTask, 
+    deleteTask, 
+    addPokemon 
+  } = useUserData();
 
-  const addTask = () => {
-    if (newTask.trim()) {
-      const newTaskObj: Task = {
-        id: Date.now().toString(),
-        title: newTask,
-        completed: false,
-        priority: "medium",
-        xpReward: 20,
-        createdAt: new Date()
-      };
-      setTasks([...tasks, newTaskObj]);
+  const handleAddTask = async () => {
+    if (newTask.trim() && user) {
+      await addTask(newTask, newTaskPriority);
       setNewTask("");
+      setNewTaskPriority('medium');
     }
-  };
-
-  const toggleTask = (id: string) => {
-    setTasks(tasks.map(task => 
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
-  };
-
-  const handlePokemonAcquired = (newPokemon: Pokemon, xpCost: number) => {
-    setPokemon([...pokemon, newPokemon]);
-    setCurrentXP(prev => prev - xpCost);
   };
 
   const getPriorityColor = (priority: string) => {
@@ -118,15 +59,15 @@ const Index = () => {
   const completedTasks = tasks.filter(task => task.completed).length;
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  const xpToNextLevel = 200;
+  const xpToNextLevel = 200 - (userStats.currentXP % 200);
 
-  const userStats = {
-    level: userLevel,
-    currentXP,
+  const userStatsForPanel = {
+    level: userStats.level,
+    currentXP: userStats.currentXP,
     xpToNextLevel,
-    totalXP,
-    streak,
-    lastCompletionDate: new Date().toISOString(),
+    totalXP: userStats.totalXP,
+    streak: userStats.streak,
+    lastCompletionDate: userStats.lastCompletionDate,
     pokemon
   };
 
@@ -223,36 +164,73 @@ const Index = () => {
           {/* Task Management Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Add Task Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Plus className="w-5 h-5" />
-                  <span>Add New Task</span>
-                </CardTitle>
-                <CardDescription>Complete tasks to catch Pokemon and level up!</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex space-x-2">
-                  <Input
-                    placeholder="Enter a new task..."
-                    value={newTask}
-                    onChange={(e) => setNewTask(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && addTask()}
-                    className="flex-1"
-                  />
-                  <Button onClick={addTask} className="bg-blue-600 hover:bg-blue-700">
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {user && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Plus className="w-5 h-5" />
+                    <span>Add New Task</span>
+                  </CardTitle>
+                  <CardDescription>Complete tasks to catch Pokemon and level up!</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex space-x-2">
+                      <Input
+                        placeholder="Enter a new task..."
+                        value={newTask}
+                        onChange={(e) => setNewTask(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleAddTask()}
+                        className="flex-1"
+                      />
+                      <Select value={newTaskPriority} onValueChange={(value: 'low' | 'medium' | 'high') => setNewTaskPriority(value)}>
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                              <span>Low</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="medium">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                              <span>Medium</span>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="high">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                              <span>High</span>
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button onClick={handleAddTask} className="bg-blue-600 hover:bg-blue-700" disabled={!newTask.trim()}>
+                        <Plus className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center space-x-2 text-sm text-gray-600">
+                      <span>XP Rewards:</span>
+                      <Badge variant="outline" className="text-green-600">Low: 15 XP</Badge>
+                      <Badge variant="outline" className="text-yellow-600">Medium: 20 XP</Badge>
+                      <Badge variant="outline" className="text-red-600">High: 30 XP</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Progress Card */}
-            <ProgressBar 
-              level={userLevel}
-              currentXP={currentXP}
-              xpToNextLevel={xpToNextLevel}
-            />
+            {user && (
+              <ProgressBar 
+                level={userStats.level}
+                currentXP={userStats.currentXP}
+                xpToNextLevel={xpToNextLevel}
+              />
+            )}
 
             {/* Task List */}
             <TaskList 
@@ -267,15 +245,33 @@ const Index = () => {
           {/* Sidebar Column */}
           <div className="space-y-6">
             {/* Stats Panel */}
-            <StatsPanel userStats={userStats} />
+            {user && <StatsPanel userStats={userStatsForPanel} />}
             
-            {/* Pokemon Collection Preview */}
-            <PokemonCollection 
-              pokemon={pokemon}
-              userLevel={userLevel}
-              currentXP={currentXP}
-              onPokemonAcquired={handlePokemonAcquired}
-            />
+            {/* Pokemon Collection with Ball Selector */}
+            {user ? (
+              <div className="space-y-6">
+                <PokeBallSelector 
+                  userLevel={userStats.level}
+                  currentXP={userStats.currentXP}
+                  onPokemonAcquired={addPokemon}
+                />
+                <PokemonCollection 
+                  pokemon={pokemon}
+                  userLevel={userStats.level}
+                  currentXP={userStats.currentXP}
+                  onPokemonAcquired={addPokemon}
+                />
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <div className="text-4xl mb-4">⚪</div>
+                  <h3 className="text-lg font-semibold mb-2">Start Your Journey!</h3>
+                  <p className="text-gray-600 mb-4">Sign in to begin catching Pokemon and tracking your progress.</p>
+                  <AuthButton />
+                </CardContent>
+              </Card>
+            )}
           </div>
         </div>
       </div>

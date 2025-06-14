@@ -33,6 +33,105 @@ export type Database = {
         }
         Relationships: []
       }
+      user_pokemon: {
+        Row: {
+          date_acquired: string
+          id: string
+          name: string
+          pokemon_id: number
+          rarity: string
+          sprite: string
+          user_id: string
+        }
+        Insert: {
+          date_acquired?: string
+          id?: string
+          name: string
+          pokemon_id: number
+          rarity: string
+          sprite: string
+          user_id: string
+        }
+        Update: {
+          date_acquired?: string
+          id?: string
+          name?: string
+          pokemon_id?: number
+          rarity?: string
+          sprite?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_stats: {
+        Row: {
+          created_at: string
+          current_xp: number
+          id: string
+          last_completion_date: string | null
+          level: number
+          streak: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_xp?: number
+          id?: string
+          last_completion_date?: string | null
+          level?: number
+          streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_xp?: number
+          id?: string
+          last_completion_date?: string | null
+          level?: number
+          streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_tasks: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          priority: string
+          title: string
+          updated_at: string
+          user_id: string
+          xp_reward: number
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          priority: string
+          title: string
+          updated_at?: string
+          user_id: string
+          xp_reward?: number
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          priority?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
