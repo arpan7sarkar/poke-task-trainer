@@ -13,40 +13,122 @@ import { ProgressBar } from "@/components/ProgressBar";
 import AuthButton from "@/components/AuthButton";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface Task {
+  id: string;
+  title: string;
+  completed: boolean;
+  priority: 'low' | 'medium' | 'high';
+  xpReward: number;
+  createdAt: Date;
+}
+
+interface Pokemon {
+  id: number;
+  name: string;
+  sprite: string;
+  rarity: 'common' | 'rare' | 'legendary';
+  dateAcquired: Date;
+}
+
 const Index = () => {
   const [newTask, setNewTask] = useState("");
-  const [tasks, setTasks] = useState([
-    { id: 1, text: "Complete morning workout", completed: false, priority: "high" },
-    { id: 2, text: "Review project proposals", completed: true, priority: "medium" },
-    { id: 3, text: "Call dentist for appointment", completed: false, priority: "low" },
+  const [tasks, setTasks] = useState<Task[]>([
+    { 
+      id: "1", 
+      title: "Complete morning workout", 
+      completed: false, 
+      priority: "high",
+      xpReward: 25,
+      createdAt: new Date()
+    },
+    { 
+      id: "2", 
+      title: "Review project proposals", 
+      completed: true, 
+      priority: "medium",
+      xpReward: 20,
+      createdAt: new Date()
+    },
+    { 
+      id: "3", 
+      title: "Call dentist for appointment", 
+      completed: false, 
+      priority: "low",
+      xpReward: 15,
+      createdAt: new Date()
+    },
   ]);
+
+  const [pokemon, setPokemon] = useState<Pokemon[]>([]);
+  const [userLevel] = useState(5);
+  const [currentXP, setCurrentXP] = useState(180);
+  const [totalXP] = useState(1250);
+  const [streak] = useState(7);
+
   const { user } = useAuth();
 
   const addTask = () => {
     if (newTask.trim()) {
-      setTasks([...tasks, {
-        id: Date.now(),
-        text: newTask,
+      const newTaskObj: Task = {
+        id: Date.now().toString(),
+        title: newTask,
         completed: false,
-        priority: "medium"
-      }]);
+        priority: "medium",
+        xpReward: 20,
+        createdAt: new Date()
+      };
+      setTasks([...tasks, newTaskObj]);
       setNewTask("");
     }
   };
 
-  const toggleTask = (id: number) => {
+  const toggleTask = (id: string) => {
     setTasks(tasks.map(task => 
       task.id === id ? { ...task, completed: !task.completed } : task
     ));
   };
 
-  const deleteTask = (id: number) => {
+  const deleteTask = (id: string) => {
     setTasks(tasks.filter(task => task.id !== id));
+  };
+
+  const handlePokemonAcquired = (newPokemon: Pokemon, xpCost: number) => {
+    setPokemon([...pokemon, newPokemon]);
+    setCurrentXP(prev => prev - xpCost);
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'from-red-500 to-red-600';
+      case 'medium': return 'from-yellow-500 to-yellow-600';
+      case 'low': return 'from-green-500 to-green-600';
+      default: return 'from-gray-500 to-gray-600';
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'High Priority';
+      case 'medium': return 'Medium Priority';
+      case 'low': return 'Low Priority';
+      default: return 'Unknown';
+    }
   };
 
   const completedTasks = tasks.filter(task => task.completed).length;
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  const xpToNextLevel = 200;
+
+  const userStats = {
+    level: userLevel,
+    currentXP,
+    xpToNextLevel,
+    totalXP,
+    streak,
+    lastCompletionDate: new Date().toISOString(),
+    pokemon
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
@@ -116,7 +198,7 @@ const Index = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100">Pokemon Caught</p>
-                  <p className="text-3xl font-bold">12</p>
+                  <p className="text-3xl font-bold">{pokemon.length}</p>
                 </div>
                 <Star className="w-12 h-12 text-purple-200" />
               </div>
@@ -166,35 +248,34 @@ const Index = () => {
             </Card>
 
             {/* Progress Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Today's Progress</CardTitle>
-                <CardDescription>Keep going! You're doing great!</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProgressBar current={completedTasks} total={totalTasks} />
-                <div className="mt-4 flex justify-between text-sm text-gray-600 dark:text-gray-400">
-                  <span>{completedTasks} completed</span>
-                  <span>{totalTasks - completedTasks} remaining</span>
-                </div>
-              </CardContent>
-            </Card>
+            <ProgressBar 
+              level={userLevel}
+              currentXP={currentXP}
+              xpToNextLevel={xpToNextLevel}
+            />
 
             {/* Task List */}
             <TaskList 
               tasks={tasks} 
-              onToggleTask={toggleTask} 
-              onDeleteTask={deleteTask} 
+              onCompleteTask={toggleTask} 
+              onDeleteTask={deleteTask}
+              getPriorityColor={getPriorityColor}
+              getPriorityLabel={getPriorityLabel}
             />
           </div>
 
           {/* Sidebar Column */}
           <div className="space-y-6">
             {/* Stats Panel */}
-            <StatsPanel />
+            <StatsPanel userStats={userStats} />
             
             {/* Pokemon Collection Preview */}
-            <PokemonCollection />
+            <PokemonCollection 
+              pokemon={pokemon}
+              userLevel={userLevel}
+              currentXP={currentXP}
+              onPokemonAcquired={handlePokemonAcquired}
+            />
           </div>
         </div>
       </div>
