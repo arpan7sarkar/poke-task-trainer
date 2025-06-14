@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { TaskList } from '../components/TaskList';
 import { ProgressBar } from '../components/ProgressBar';
@@ -140,6 +139,15 @@ const Index = () => {
     setTasks(tasks.filter(t => t.id !== taskId));
   };
 
+  const handlePokemonAcquired = (newPokemon: Pokemon, xpCost: number) => {
+    setUserStats(prev => ({
+      ...prev,
+      currentXP: prev.currentXP - xpCost,
+      pokemon: [...prev.pokemon, newPokemon]
+    }));
+    console.log(`Pokemon acquired! -${xpCost} XP spent`);
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'from-red-500 to-red-600';
@@ -268,12 +276,7 @@ const Index = () => {
               pokemon={userStats.pokemon}
               userLevel={userStats.level}
               currentXP={userStats.currentXP}
-              onPokemonAcquired={(newPokemon) => {
-                setUserStats(prev => ({
-                  ...prev,
-                  pokemon: [...prev.pokemon, newPokemon]
-                }));
-              }}
+              onPokemonAcquired={handlePokemonAcquired}
             />
           </div>
         </div>

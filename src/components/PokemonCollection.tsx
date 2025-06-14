@@ -16,7 +16,7 @@ interface PokemonCollectionProps {
   pokemon: Pokemon[];
   userLevel: number;
   currentXP: number;
-  onPokemonAcquired: (pokemon: Pokemon) => void;
+  onPokemonAcquired: (pokemon: Pokemon, xpCost: number) => void;
 }
 
 export const PokemonCollection = ({ 
@@ -158,7 +158,7 @@ export const PokemonCollection = ({
       // Simulate opening animation delay
       setTimeout(() => {
         setLastAcquired(newPokemon);
-        onPokemonAcquired(newPokemon);
+        onPokemonAcquired(newPokemon, xpCost);
         setIsOpening(false);
       }, 2000);
     } catch (error) {
