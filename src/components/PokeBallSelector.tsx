@@ -223,7 +223,7 @@ export const PokeBallSelector = ({
           Select a ball to catch Pokémon and expand your collection!
         </p>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 bg-[#010a00]/[0.43]">
         {isOpening && selectedBall ? <div className="text-center space-y-4 py-8">
             <div className={`text-6xl mb-4 animate-bounce`}>
               {ballConfigs[selectedBall].emoji}
