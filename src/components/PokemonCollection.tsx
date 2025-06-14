@@ -1,8 +1,8 @@
-
 import { useState } from 'react';
-import { Star, Gift, Sparkles } from 'lucide-react';
+import { Star, Gift, Sparkles, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface Pokemon {
   id: number;
@@ -27,6 +27,7 @@ export const PokemonCollection = ({
 }: PokemonCollectionProps) => {
   const [isOpening, setIsOpening] = useState(false);
   const [lastAcquired, setLastAcquired] = useState<Pokemon | null>(null);
+  const navigate = useNavigate();
 
   const xpCost = Math.max(50, userLevel * 25);
   const canAfford = currentXP >= xpCost;
@@ -235,10 +236,23 @@ export const PokemonCollection = ({
       {/* Pokémon Collection */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Star className="w-5 h-5 text-yellow-500" />
-            <span>My Collection ({pokemon.length})</span>
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center space-x-2">
+              <Star className="w-5 h-5 text-yellow-500" />
+              <span>My Collection ({pokemon.length})</span>
+            </CardTitle>
+            {pokemon.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/collection')}
+                className="flex items-center space-x-2"
+              >
+                <span>View All</span>
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           {pokemon.length === 0 ? (
