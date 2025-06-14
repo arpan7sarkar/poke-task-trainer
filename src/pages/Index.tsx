@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +10,7 @@ import { TaskList } from "@/components/TaskList";
 import { StatsPanel } from "@/components/StatsPanel";
 import { ProgressBar } from "@/components/ProgressBar";
 import { PokeBallSelector } from "@/components/PokeBallSelector";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import AuthButton from "@/components/AuthButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserData } from "@/hooks/useUserData";
@@ -91,6 +91,7 @@ const Index = () => {
                 <span>Welcome back, {user.user_metadata?.username || user.email?.split('@')[0]}!</span>
               </div>
             )}
+            <ThemeToggle />
             <AuthButton />
           </div>
         </div>
