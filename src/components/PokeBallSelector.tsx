@@ -253,12 +253,12 @@ export const PokeBallSelector = ({
                       <div className="text-4xl drop-shadow-lg">{config.emoji}</div>
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-bold text-xl drop-shadow-md text-neutral-50">{config.name}</span>
+                          <span className="text-xl drop-shadow-md text-neutral-50 font-extrabold">{config.name}</span>
                           <div className="text-yellow-300">
                             {config.icon}
                           </div>
                         </div>
-                        <p className="text-sm text-white/95 dark:text-white/90 font-medium">{config.description}</p>
+                        <p className="text-sm text-white/95 dark:text-white/90 font-bold">{config.description}</p>
                         <div className="text-xs text-white/80 dark:text-white/75 font-semibold bg-black/20 rounded-full px-2 py-1 inline-block">
                           Level {config.levelRequired}+ • {config.xpCost} XP
                         </div>
