@@ -194,32 +194,41 @@ export const PokeBallSelector = ({ userLevel, currentXP, onPokemonAcquired }: Po
   };
 
   return (
-    <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-indigo-600 dark:to-purple-700 text-white border-0">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Sparkles className="w-5 h-5" />
-          <span>Choose Your Poké Ball</span>
+    <Card className="bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-indigo-700 dark:to-purple-800 text-white border-0 shadow-xl">
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center space-x-3 text-2xl font-bold">
+          <div className="p-2 bg-white/20 rounded-full">
+            <Sparkles className="w-6 h-6 text-yellow-300" />
+          </div>
+          <span className="bg-gradient-to-r from-yellow-200 to-white bg-clip-text text-transparent font-extrabold text-2xl tracking-wide drop-shadow-lg">
+            Choose Your Poké Ball
+          </span>
         </CardTitle>
+        <p className="text-indigo-100 dark:text-purple-200 text-sm font-medium mt-2">
+          Select a ball to catch Pokémon and expand your collection!
+        </p>
       </CardHeader>
       <CardContent className="space-y-4">
         {isOpening && selectedBall ? (
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-4 py-8">
             <div className={`text-6xl mb-4 animate-bounce`}>
               {ballConfigs[selectedBall].emoji}
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center justify-center space-x-2">
-                <Sparkles className="w-4 h-4 animate-spin" />
-                <span>Opening {ballConfigs[selectedBall].name}...</span>
-                <Sparkles className="w-4 h-4 animate-spin" />
+                <Sparkles className="w-5 h-5 animate-spin text-yellow-300" />
+                <span className="text-xl font-bold text-white drop-shadow-md">
+                  Opening {ballConfigs[selectedBall].name}...
+                </span>
+                <Sparkles className="w-5 h-5 animate-spin text-yellow-300" />
               </div>
-              <div className="w-full bg-white/20 rounded-full h-2">
-                <div className="h-full bg-white rounded-full animate-pulse" style={{ width: '100%' }} />
+              <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-yellow-400 to-yellow-200 rounded-full animate-pulse shadow-inner" style={{ width: '100%' }} />
               </div>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-4">
             {(Object.entries(ballConfigs) as [BallType, BallConfig][]).map(([ballType, config]) => {
               const canAfford = currentXP >= config.xpCost;
               const levelMet = userLevel >= config.levelRequired;
@@ -228,22 +237,24 @@ export const PokeBallSelector = ({ userLevel, currentXP, onPokemonAcquired }: Po
               return (
                 <div
                   key={ballType}
-                  className={`p-4 rounded-lg border-2 transition-all ${
+                  className={`p-5 rounded-xl border-2 transition-all duration-300 transform hover:scale-105 ${
                     canUse 
-                      ? 'border-white/40 bg-white/20 hover:bg-white/30 cursor-pointer dark:border-white/50 dark:bg-white/10 dark:hover:bg-white/20' 
-                      : 'border-white/20 bg-white/10 opacity-60 dark:border-white/30 dark:bg-white/5'
+                      ? 'border-white/50 bg-white/20 hover:bg-white/30 cursor-pointer shadow-lg hover:shadow-xl dark:border-white/60 dark:bg-white/15 dark:hover:bg-white/25' 
+                      : 'border-white/30 bg-white/10 opacity-60 dark:border-white/40 dark:bg-white/8'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="text-3xl">{config.emoji}</div>
-                      <div>
+                    <div className="flex items-center space-x-4">
+                      <div className="text-4xl drop-shadow-lg">{config.emoji}</div>
+                      <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <span className="font-semibold text-white">{config.name}</span>
-                          {config.icon}
+                          <span className="font-bold text-xl text-white drop-shadow-md">{config.name}</span>
+                          <div className="text-yellow-300">
+                            {config.icon}
+                          </div>
                         </div>
-                        <p className="text-sm text-white/90 dark:text-white/80">{config.description}</p>
-                        <div className="text-xs text-white/70 dark:text-white/60">
+                        <p className="text-sm text-white/95 dark:text-white/90 font-medium">{config.description}</p>
+                        <div className="text-xs text-white/80 dark:text-white/75 font-semibold bg-black/20 rounded-full px-2 py-1 inline-block">
                           Level {config.levelRequired}+ • {config.xpCost} XP
                         </div>
                       </div>
@@ -251,7 +262,7 @@ export const PokeBallSelector = ({ userLevel, currentXP, onPokemonAcquired }: Po
                     <Button
                       onClick={() => openPokeBall(ballType)}
                       disabled={!canUse}
-                      className={`bg-gradient-to-r ${config.color} hover:opacity-90 disabled:opacity-40 text-white border-0`}
+                      className={`bg-gradient-to-r ${config.color} hover:opacity-90 disabled:opacity-40 text-white border-0 font-bold shadow-lg transition-all duration-200 hover:shadow-xl`}
                       size="sm"
                     >
                       {!levelMet ? `Level ${config.levelRequired}` : 
@@ -261,18 +272,18 @@ export const PokeBallSelector = ({ userLevel, currentXP, onPokemonAcquired }: Po
                   </div>
                   
                   {/* Rarity percentages */}
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                    <div className="text-center">
-                      <div className="text-white/80 dark:text-white/70">Common</div>
-                      <div className="font-semibold text-white">{Math.round(config.rarityWeights.common * 100)}%</div>
+                  <div className="mt-4 grid grid-cols-3 gap-3 text-xs">
+                    <div className="text-center bg-black/20 rounded-lg p-2">
+                      <div className="text-gray-200 dark:text-gray-300 font-semibold">Common</div>
+                      <div className="font-bold text-white text-lg">{Math.round(config.rarityWeights.common * 100)}%</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-blue-200 dark:text-blue-300">Rare</div>
-                      <div className="font-semibold text-white">{Math.round(config.rarityWeights.rare * 100)}%</div>
+                    <div className="text-center bg-black/20 rounded-lg p-2">
+                      <div className="text-blue-200 dark:text-blue-300 font-semibold">Rare</div>
+                      <div className="font-bold text-white text-lg">{Math.round(config.rarityWeights.rare * 100)}%</div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-purple-200 dark:text-purple-300">Legendary</div>
-                      <div className="font-semibold text-white">{Math.round(config.rarityWeights.legendary * 100)}%</div>
+                    <div className="text-center bg-black/20 rounded-lg p-2">
+                      <div className="text-purple-200 dark:text-purple-300 font-semibold">Legendary</div>
+                      <div className="font-bold text-white text-lg">{Math.round(config.rarityWeights.legendary * 100)}%</div>
                     </div>
                   </div>
                 </div>
@@ -282,21 +293,21 @@ export const PokeBallSelector = ({ userLevel, currentXP, onPokemonAcquired }: Po
         )}
 
         {lastAcquired && (
-          <div className="mt-4 p-4 bg-white/20 dark:bg-white/10 rounded-lg text-center border border-white/30 dark:border-white/20">
-            <div className="text-3xl mb-2">
+          <div className="mt-6 p-6 bg-gradient-to-br from-white/25 to-white/15 dark:from-white/20 dark:to-white/10 rounded-xl text-center border-2 border-white/40 dark:border-white/30 shadow-xl">
+            <div className="text-4xl mb-3">
               {lastAcquired.sprite.startsWith('http') ? (
                 <img 
                   src={lastAcquired.sprite} 
                   alt={lastAcquired.name}
-                  className="w-16 h-16 mx-auto rounded-lg"
+                  className="w-20 h-20 mx-auto rounded-xl shadow-lg"
                 />
               ) : (
-                lastAcquired.sprite
+                <span className="drop-shadow-lg">{lastAcquired.sprite}</span>
               )}
             </div>
-            <div className="font-semibold text-lg text-white">{lastAcquired.name}</div>
-            <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium bg-gradient-to-r ${rarityColors[lastAcquired.rarity]} text-white mt-2`}>
-              {rarityLabels[lastAcquired.rarity]}
+            <div className="font-bold text-2xl text-white drop-shadow-md mb-2">{lastAcquired.name}</div>
+            <div className={`inline-block px-4 py-2 rounded-full text-sm font-bold bg-gradient-to-r ${rarityColors[lastAcquired.rarity]} text-white shadow-lg border-2 border-white/30`}>
+              ✨ {rarityLabels[lastAcquired.rarity]} ✨
             </div>
           </div>
         )}
