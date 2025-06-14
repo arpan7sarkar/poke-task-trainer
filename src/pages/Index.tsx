@@ -6,6 +6,7 @@ import { StatsPanel } from '../components/StatsPanel';
 import { Plus, Zap, Award, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 interface Task {
   id: string;
@@ -167,9 +168,9 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-blue-900 dark:to-purple-900">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b-4 border-blue-500">
+      <div className="bg-white dark:bg-gray-800 shadow-lg border-b-4 border-blue-500 dark:border-blue-400">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -177,17 +178,18 @@ const Index = () => {
                 <Zap className="text-white w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">PokeTasker</h1>
-                <p className="text-gray-600">Gotta complete 'em all!</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">PokeTasker</h1>
+                <p className="text-gray-600 dark:text-gray-300">Gotta complete 'em all!</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <div className="text-right">
-                <div className="text-sm text-gray-600">Level {userStats.level} Trainer</div>
+                <div className="text-sm text-gray-600 dark:text-gray-300">Level {userStats.level} Trainer</div>
                 <div className="flex items-center space-x-2">
                   <Award className="w-4 h-4 text-yellow-500" />
-                  <span className="font-semibold">{userStats.streak} day streak</span>
+                  <span className="font-semibold dark:text-white">{userStats.streak} day streak</span>
                 </div>
               </div>
             </div>
