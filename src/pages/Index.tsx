@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,7 +60,9 @@ const Index = () => {
   const completedTasks = tasks.filter(task => task.completed).length;
   const totalTasks = tasks.length;
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  const xpToNextLevel = 200 - (userStats.currentXP % 200);
+  
+  // Fixed XP calculation - XP needed for next level is always 200
+  const xpToNextLevel = 200;
 
   const userStatsForPanel = {
     level: userStats.level,

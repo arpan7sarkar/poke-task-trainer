@@ -29,6 +29,8 @@ interface UserStats {
   lastCompletionDate: string | null;
 }
 
+const XP_PER_LEVEL = 200;
+
 export const useUserData = () => {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -90,14 +92,32 @@ export const useUserData = () => {
 
       if (pokemonError) throw pokemonError;
 
-      // Fetch stats
-      const { data: statsData, error: statsError } = await supabase
+      // Fetch stats - create if doesn't exist
+      let { data: statsData, error: statsError } = await supabase
         .from('user_stats')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (statsError && statsError.code !== 'PGRST116') throw statsError;
+      if (statsError && statsError.code === 'PGRST116') {
+        // User stats don't exist, create them
+        const { data: newStatsData, error: createError } = await supabase
+          .from('user_stats')
+          .insert({
+            user_id: user.id,
+            level: 1,
+            current_xp: 0,
+            total_xp: 0,
+            streak: 0
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        statsData = newStatsData;
+      } else if (statsError) {
+        throw statsError;
+      }
 
       setTasks(tasksData?.map(task => ({
         id: task.id,
@@ -223,55 +243,38 @@ export const useUserData = () => {
     if (!user) return;
 
     try {
-      const newCurrentXP = userStats.currentXP + xpGained;
       const newTotalXP = userStats.totalXP + xpGained;
+      let newCurrentXP = userStats.currentXP + xpGained;
       let newLevel = userStats.level;
 
-      // Level up calculation (every 200 XP)
-      const xpToNextLevel = 200;
-      if (newCurrentXP >= xpToNextLevel) {
-        newLevel += Math.floor(newCurrentXP / xpToNextLevel);
-        const remainingXP = newCurrentXP % xpToNextLevel;
+      // Calculate level ups
+      while (newCurrentXP >= XP_PER_LEVEL) {
+        newCurrentXP -= XP_PER_LEVEL;
+        newLevel += 1;
+      }
 
-        const { error } = await supabase
-          .from('user_stats')
-          .update({
-            level: newLevel,
-            current_xp: remainingXP,
-            total_xp: newTotalXP,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-
-        setUserStats(prev => ({
-          ...prev,
+      const { error } = await supabase
+        .from('user_stats')
+        .update({
           level: newLevel,
-          currentXP: remainingXP,
-          totalXP: newTotalXP
-        }));
+          current_xp: newCurrentXP,
+          total_xp: newTotalXP,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
 
-        if (newLevel > userStats.level) {
-          toast.success(`Level up! You're now level ${newLevel}!`);
-        }
-      } else {
-        const { error } = await supabase
-          .from('user_stats')
-          .update({
-            current_xp: newCurrentXP,
-            total_xp: newTotalXP,
-            updated_at: new Date().toISOString()
-          })
-          .eq('user_id', user.id);
+      if (error) throw error;
 
-        if (error) throw error;
+      const oldLevel = userStats.level;
+      setUserStats(prev => ({
+        ...prev,
+        level: newLevel,
+        currentXP: newCurrentXP,
+        totalXP: newTotalXP
+      }));
 
-        setUserStats(prev => ({
-          ...prev,
-          currentXP: newCurrentXP,
-          totalXP: newTotalXP
-        }));
+      if (newLevel > oldLevel) {
+        toast.success(`Level up! You're now level ${newLevel}!`);
       }
     } catch (error) {
       console.error('Error updating XP:', error);

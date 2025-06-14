@@ -9,7 +9,8 @@ interface ProgressBarProps {
 }
 
 export const ProgressBar = ({ level, currentXP, xpToNextLevel }: ProgressBarProps) => {
-  const progressPercentage = (currentXP / xpToNextLevel) * 100;
+  // Calculate progress percentage based on current XP vs XP needed for next level
+  const progressPercentage = Math.min((currentXP / xpToNextLevel) * 100, 100);
 
   return (
     <Card className="bg-gradient-to-r from-blue-600 to-purple-700 text-white">
